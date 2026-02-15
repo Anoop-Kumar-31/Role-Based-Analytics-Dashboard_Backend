@@ -1,0 +1,33 @@
+{
+    "development": {
+        "username": "postgres",
+        "password": "postgres",
+        "database": "breadcrumbs_dev",
+        "host": "localhost",
+        "port": 5432,
+        "dialect": "postgres",
+        "logging": false
+    },
+    "production": {
+        "username": null,
+        "password": null,
+        "database": null,
+        "host": null,
+        "port": 5432,
+        "dialect": "postgres",
+        "use_env_variable": "DATABASE_URL",
+        "dialectOptions": {
+            "ssl": {
+                "require": true,
+                "rejectUnauthorized": false
+            }
+        },
+        "pool": {
+            "max": 5,
+            "min": 0,
+            "acquire": 30000,
+            "idle": 10000
+        },
+        "logging": false
+    }
+}
