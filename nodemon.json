@@ -1,0 +1,16 @@
+{
+    "delay": 1000,
+    "watch": [
+        "src",
+        "server.js"
+    ],
+    "ignore": [
+        "node_modules",
+        "*.test.js",
+        ".git"
+    ],
+    "verbose": false,
+    "execMap": {
+        "js": "node"
+    }
+}

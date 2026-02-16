@@ -1,44 +1,44 @@
-const { Restaurant, Company, User } = require('../models');
+const { Restaurant, Company, Forecast, Target, SalesCategory } = require('../models');
 
-// Create restaurant
-exports.createRestaurant = async (req, res) => {
+/**
+ * Create a new restaurant
+ * @param {Object} restaurantData - Restaurant data
+ * @returns {Promise<Object>} Created restaurant
+ * @throws {Error} If creation fails
+ */
+exports.createRestaurant = async (restaurantData) => {
     try {
-        const { restaurant_name, restaurant_email, restaurant_phone, restaurant_location, company_id } = req.body;
-
         const restaurant = await Restaurant.create({
-            restaurant_name,
-            restaurant_email,
-            restaurant_phone,
-            restaurant_location,
-            company_id,
+            restaurant_name: restaurantData.restaurant_name,
+            restaurant_email: restaurantData.restaurant_email,
+            restaurant_phone: restaurantData.restaurant_phone,
+            restaurant_location: restaurantData.restaurant_location,
+            company_id: restaurantData.company_id,
         });
 
-        res.status(201).json({
-            message: 'Restaurant created successfully',
-            restaurant
-        });
-
+        return restaurant;
     } catch (error) {
-        console.error('Create restaurant error:', error);
-        res.status(500).json({
-            error: 'Internal server error',
-            message: 'Error creating restaurant'
-        });
+        console.error('Create restaurant service error:', error);
+        throw error;
     }
 };
 
-// Get all restaurants by company
-exports.getRestaurantsByCompany = async (req, res) => {
-    console.log("Finding Restaurants")
+/**
+ * Get restaurants by company with optional filtering
+ * @param {string} company_id - Company ID (optional)
+ * @param {string} userRole - User role for authorization
+ * @param {string} userCompanyId - User's company ID for authorization
+ * @returns {Promise<Array>} Array of restaurants
+ * @throws {Error} If query fails
+ */
+exports.getRestaurantsByCompany = async (company_id, userRole, userCompanyId) => {
     try {
-        const { company_id } = req.params;
-
         const where = { is_active: true };
 
         if (company_id) {
             where.company_id = company_id;
-        } else if (req.userRole !== 'Super_Admin') {
-            where.company_id = req.companyId;
+        } else if (userRole !== 'Super_Admin') {
+            where.company_id = userCompanyId;
         }
 
         const restaurants = await Restaurant.findAll({
@@ -49,23 +49,21 @@ exports.getRestaurantsByCompany = async (req, res) => {
             order: [['createdAt', 'DESC']],
         });
 
-        res.json({ data: restaurants });
-
+        return restaurants;
     } catch (error) {
-        console.error('Get restaurants error:', error);
-        res.status(500).json({
-            error: 'Internal server error',
-            message: 'Error fetching restaurants'
-        });
+        console.error('Get restaurants by company service error:', error);
+        throw error;
     }
 };
 
-// Get restaurant by ID
-exports.getRestaurantById = async (req, res) => {
+/**
+ * Get restaurant by ID with full details (forecasts, targets, sales categories)
+ * @param {string} restaurant_id - Restaurant ID
+ * @returns {Promise<Object>} Restaurant with formatted targets and forecasts
+ * @throws {Error} If restaurant not found
+ */
+exports.getRestaurantById = async (restaurant_id) => {
     try {
-        const { restaurant_id } = req.params;
-        const { Forecast, Target, SalesCategory } = require('../models');
-
         const restaurant = await Restaurant.findOne({
             where: { restaurant_id, is_active: true },
             include: [
@@ -92,10 +90,7 @@ exports.getRestaurantById = async (req, res) => {
         });
 
         if (!restaurant) {
-            return res.status(404).json({
-                error: 'Restaurant not found',
-                message: 'No active restaurant found with this ID'
-            });
+            throw new Error('Restaurant not found');
         }
 
         // Format revenue_targets from forecasts
@@ -110,7 +105,7 @@ exports.getRestaurantById = async (req, res) => {
             });
         }
 
-        // Format labor_target and cogs_target from targets (get current month or latest)
+        // Format labor_target and cogs_target from targets
         let labor_target = {};
         let cogs_target = {};
 
@@ -151,73 +146,68 @@ exports.getRestaurantById = async (req, res) => {
         restaurantData.labor_target = labor_target;
         restaurantData.cogs_target = cogs_target;
 
-        res.json({ data: restaurantData });
-
+        return restaurantData;
     } catch (error) {
-        console.error('Get restaurant error:', error);
-        res.status(500).json({
-            error: 'Internal server error',
-            message: 'Failed to fetch restaurant'
-        });
+        console.error('Get restaurant by ID service error:', error);
+        throw error;
     }
 };
 
-// Update restaurant
-exports.updateRestaurant = async (req, res) => {
+/**
+ * Update restaurant
+ * @param {string} restaurant_id - Restaurant ID
+ * @param {Object} updates - Fields to update
+ * @returns {Promise<Object>} Updated restaurant
+ * @throws {Error} If restaurant not found
+ */
+exports.updateRestaurant = async (restaurant_id, updates) => {
     try {
-        const { restaurant_id } = req.params;
-        const updates = req.body;
-
         const restaurant = await Restaurant.findOne({ where: { restaurant_id, is_active: true } });
 
         if (!restaurant) {
-            return res.status(404).json({
-                error: 'Restaurant not found',
-                message: 'No active restaurant found with this ID'
-            });
+            throw new Error('Restaurant not found');
         }
 
         await restaurant.update(updates);
 
-        res.json({
-            message: 'Restaurant updated successfully',
-            restaurant
-        });
-
+        return restaurant;
     } catch (error) {
-        console.error('Update restaurant error:', error);
-        res.status(500).json({
-            error: 'Internal server error',
-            message: 'Error updating restaurant'
-        });
+        console.error('Update restaurant service error:', error);
+        throw error;
     }
 };
 
-// Delete restaurant (soft delete)
-exports.deleteRestaurant = async (req, res) => {
+/**
+ * Delete restaurant (soft delete)
+ * @param {string} restaurant_id - Restaurant ID
+ * @returns {Promise<void>}
+ * @throws {Error} If restaurant not found
+ */
+exports.deleteRestaurant = async (restaurant_id) => {
     try {
-        const { restaurant_id } = req.params;
-
         const restaurant = await Restaurant.findOne({ where: { restaurant_id } });
 
         if (!restaurant) {
-            return res.status(404).json({
-                error: 'Restaurant not found',
-                message: 'No restaurant found with this ID'
-            });
+            throw new Error('Restaurant not found');
         }
 
         await restaurant.update({ is_active: false });
-
-        res.json({
-            message: 'Restaurant deleted successfully'
-        });
-
     } catch (error) {
-        console.error('Delete restaurant error:', error);
-        res.status(500).json({
-            error: 'Internal server error',
-            message: 'Error deleting restaurant'
+        console.error('Delete restaurant service error:', error);
+        throw error;
+    }
+};
+
+exports.getRestaurantIdsByCompanyId = async (company_id) => {
+    try {
+        const restaurants = await Restaurant.findAll({
+            where: { company_id, is_active: true },
+            attributes: ['restaurant_id']
         });
+
+        return restaurants.map(restaurant => restaurant.restaurant_id);
+    } catch (error) {
+        console.error('Get restaurant IDs by company ID service error:', error);
+        throw error;
     }
 };

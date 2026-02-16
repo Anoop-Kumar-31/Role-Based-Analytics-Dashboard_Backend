@@ -1,9 +1,9 @@
 const bcrypt = require('bcrypt');
 const db = require('../models');
-const forecastService = require('../services/forecastService');
-const targetService = require('../services/targetService');
-const salesCategoryService = require('../services/salesCategoryService');
-const posService = require('../services/posService');
+const forecastService = require('../services/forecast.service');
+const targetService = require('../services/target.service');
+const salesCategoryService = require('../services/salesCategory.service');
+const posService = require('../services/pos.service');
 
 // Helper function to convert month names to numbers
 function convertMonthNameToNumber(month) {
@@ -285,6 +285,68 @@ exports.getPendingOnboardings = async (req, res) => {
         res.status(500).json({
             error: 'Internal server error',
             message: 'Failed to fetch pending onboardings'
+        });
+    }
+};
+
+// Onboard company (moved to company controller for better organization)
+exports.onboardCompany = async (req, res) => {
+    try {
+        const companyService = require('../services/company.service');
+        const { company_id } = req.params;
+
+        const company = await companyService.onboardCompany(company_id);
+
+        res.json({
+            data: {
+                message: 'Company onboarded successfully',
+                company
+            }
+        });
+
+    } catch (error) {
+        console.error('Onboard company error:', error);
+
+        if (error.message === 'Company not found') {
+            return res.status(404).json({
+                error: 'Company not found',
+                message: 'No company found with this ID'
+            });
+        }
+
+        res.status(500).json({
+            error: 'Internal server error',
+            message: 'Error onboarding company'
+        });
+    }
+};
+
+// Reject company
+exports.rejectCompany = async (req, res) => {
+    try {
+        const companyService = require('../services/company.service');
+        const { company_id } = req.params;
+
+        const company = await companyService.rejectCompany(company_id);
+
+        res.json({
+            message: 'Company request rejected',
+            company
+        });
+
+    } catch (error) {
+        console.error('Reject company error:', error);
+
+        if (error.message === 'Company not found') {
+            return res.status(404).json({
+                error: 'Company not found',
+                message: 'No company found with this ID'
+            });
+        }
+
+        res.status(500).json({
+            error: 'Internal server error',
+            message: 'Error rejecting company'
         });
     }
 };

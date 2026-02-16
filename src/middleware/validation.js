@@ -80,9 +80,7 @@ const validateRevenue = [
 // Expense validation rules
 const validateExpense = [
     body('restaurant_id').isUUID().withMessage('Valid restaurant ID is required'),
-    body('category').notEmpty().withMessage('Category is required'),
-    body('amount').isDecimal({ decimal_digits: '0,2' }).withMessage('Amount must be a valid number'),
-    body('date').isDate().withMessage('Valid date is required'),
+    body('expense_date').isDate().withMessage('Valid expense_date is required'),
     handleValidationErrors
 ];
 

@@ -20,9 +20,23 @@ exports.getAllRoles = async (req, res) => {
             }
         ];
 
-        res.json({
-            data: roles
-        });
+        console.log(req.userRole);
+        // check for user role
+        if (req.userRole === 'Super_Admin') {
+            return res.json({
+                data: roles,
+                message: 'Roles fetched successfully'
+            });
+        } else if (req.userRole === 'Company_Admin') {
+            return res.json({
+                data: roles.filter(role => role.role_name !== 'Super_Admin'),
+                message: 'Roles fetched successfully'
+            });
+        } else if (req.userRole === 'Restaurant_Employee') {
+            return res.json({
+                data: roles.filter(role => role.role_name !== 'Super_Admin' && role.role_name !== 'Company_Admin')
+            });
+        }
 
     } catch (error) {
         console.error('Get all roles error:', error);

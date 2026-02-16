@@ -60,8 +60,30 @@ app.get('/health', (req, res) => {
     });
 });
 
-// API routes
-app.use('/api/v1', require('./src/routes'));
+// API routes - Modular routing
+const userRoutes = require('./src/routes/user.routes');
+const companyRoutes = require('./src/routes/company.routes');
+const restaurantRoutes = require('./src/routes/restaurant.routes');
+const revenueRoutes = require('./src/routes/revenue.routes');
+const expenseRoutes = require('./src/routes/expense.routes');
+const blueBookRoutes = require('./src/routes/blueBook.routes');
+const onboardingRoutes = require('./src/routes/onboarding.routes');
+const roleRoutes = require('./src/routes/role.routes');
+const locationRoutes = require('./src/routes/location.routes');
+
+// Register routes
+app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/companies', companyRoutes);
+app.use('/api/v1/restaurants', restaurantRoutes);
+app.use('/api/v1/restaurants', revenueRoutes); // Revenue routes nested under /restaurants
+app.use('/api/v1/expense', expenseRoutes);
+app.use('/api/v1/blue-book', blueBookRoutes);
+app.use('/api/v1/onboarding', onboardingRoutes);
+app.use('/api/v1/roles', roleRoutes);
+app.use('/api/v1/location', locationRoutes);
+
+// Note: Revenue routes are under /api/v1/restaurants/* path
+// This maintains backward compatibility with existing frontend
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -94,6 +116,8 @@ app.use((err, req, res, next) => {
 });
 
 // Database connection and server start
+let server; // Store server reference for graceful shutdown
+
 const startServer = async () => {
     try {
         // Test database connection
@@ -107,13 +131,15 @@ const startServer = async () => {
             console.log('✅ Database models synchronized');
         }
 
-        // Start server
-        app.listen(PORT, () => {
-            console.log(`\n🚀 Server running on port ${PORT}`);
-            console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
-            console.log(`🔗 API: http://localhost:${PORT}/api/v1`);
-            console.log(`❤️  Health: http://localhost:${PORT}/health\n`);
-        });
+        // Start server only if not already running
+        if (!server) {
+            server = app.listen(PORT, () => {
+                console.log(`\n🚀 Server running on port ${PORT}`);
+                console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
+                console.log(`🔗 API: http://localhost:${PORT}/api/v1`);
+                console.log(`❤️  Health: http://localhost:${PORT}/health\n`);
+            });
+        }
 
     } catch (error) {
         console.error('❌ Unable to start server:', error);
@@ -121,12 +147,37 @@ const startServer = async () => {
     }
 };
 
-// Handle shutdown gracefully (important for Render)
-process.on('SIGTERM', async () => {
-    console.log('SIGTERM received. Closing server gracefully...');
-    await db.sequelize.close();
-    process.exit(0);
-});
+// Graceful shutdown handler
+const gracefulShutdown = async (signal) => {
+    console.log(`\n${signal} received. Closing server gracefully...`);
+
+    if (server) {
+        server.close(async () => {
+            console.log('✅ HTTP server closed');
+
+            try {
+                await db.sequelize.close();
+                console.log('✅ Database connection closed');
+                process.exit(0);
+            } catch (error) {
+                console.error('❌ Error closing database:', error);
+                process.exit(1);
+            }
+        });
+
+        // Force close after 10 seconds
+        setTimeout(() => {
+            console.error('⚠️  Forced shutdown after timeout');
+            process.exit(1);
+        }, 10000);
+    } else {
+        process.exit(0);
+    }
+};
+
+// Handle shutdown signals
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT')); // Ctrl+C
 
 
 // Create super_admin if not exists

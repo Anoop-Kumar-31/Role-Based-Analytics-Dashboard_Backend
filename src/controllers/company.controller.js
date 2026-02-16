@@ -1,17 +1,16 @@
-const { Company, Restaurant, User } = require('../models');
+const companyService = require('../services/company.service');
 
 // Create company
 exports.createCompany = async (req, res) => {
     try {
         const { company_name, company_email, company_phone, number_of_restaurants } = req.body;
 
-        const company = await Company.create({
+        // Call service layer
+        const company = await companyService.createCompany({
             company_name,
             company_email,
             company_phone,
-            number_of_restaurants: number_of_restaurants || 0,
-            is_active: true,
-            is_onboarded: false, // Pending approval
+            number_of_restaurants
         });
 
         res.status(201).json({
@@ -31,14 +30,8 @@ exports.createCompany = async (req, res) => {
 // Get all onboarded companies
 exports.getOnboardedCompanies = async (req, res) => {
     try {
-        const companies = await Company.findAll({
-            where: { is_onboarded: true, is_active: true },
-            include: [
-                { model: Restaurant, as: 'restaurants' },
-                { model: User, as: 'users', attributes: { exclude: ['password'] } }
-            ],
-            order: [['createdAt', 'DESC']],
-        });
+        // Call service layer
+        const companies = await companyService.getOnboardedCompanies();
 
         res.json({ data: companies });
 
@@ -54,11 +47,8 @@ exports.getOnboardedCompanies = async (req, res) => {
 // Get pending companies
 exports.getPendingCompanies = async (req, res) => {
     try {
-        const companies = await Company.findAll({
-            where: { is_onboarded: false, is_active: true },
-            include: [{ model: Restaurant, as: 'restaurants' }],
-            order: [['createdAt', 'ASC']],
-        });
+        // Call service layer
+        const companies = await companyService.getPendingCompanies();
 
         res.json({ data: companies });
 
@@ -76,16 +66,8 @@ exports.onboardCompany = async (req, res) => {
     try {
         const { company_id } = req.params;
 
-        const company = await Company.findOne({ where: { company_id } });
-
-        if (!company) {
-            return res.status(404).json({
-                error: 'Company not found',
-                message: 'No company found with this ID'
-            });
-        }
-
-        await company.update({ is_onboarded: true, is_active: true });
+        // Call service layer
+        const company = await companyService.onboardCompany(company_id);
 
         res.json({
             data: {
@@ -96,6 +78,14 @@ exports.onboardCompany = async (req, res) => {
 
     } catch (error) {
         console.error('Onboard company error:', error);
+
+        if (error.message === 'Company not found') {
+            return res.status(404).json({
+                error: 'Company not found',
+                message: 'No company found with this ID'
+            });
+        }
+
         res.status(500).json({
             error: 'Internal server error',
             message: 'Error onboarding company'
@@ -108,16 +98,8 @@ exports.rejectCompany = async (req, res) => {
     try {
         const { company_id } = req.params;
 
-        const company = await Company.findOne({ where: { company_id } });
-
-        if (!company) {
-            return res.status(404).json({
-                error: 'Company not found',
-                message: 'No company found with this ID'
-            });
-        }
-
-        await company.update({ is_onboarded: false, is_active: false });
+        // Call service layer
+        const company = await companyService.rejectCompany(company_id);
 
         res.json({
             message: 'Company request rejected',
@@ -126,6 +108,14 @@ exports.rejectCompany = async (req, res) => {
 
     } catch (error) {
         console.error('Reject company error:', error);
+
+        if (error.message === 'Company not found') {
+            return res.status(404).json({
+                error: 'Company not found',
+                message: 'No company found with this ID'
+            });
+        }
+
         res.status(500).json({
             error: 'Internal server error',
             message: 'Error rejecting company'
@@ -138,25 +128,21 @@ exports.getCompanyById = async (req, res) => {
     try {
         const { company_id } = req.params;
 
-        const company = await Company.findOne({
-            where: { company_id, is_active: true },
-            include: [
-                { model: Restaurant, as: 'restaurants' },
-                { model: User, as: 'users', attributes: { exclude: ['password'] } }
-            ],
-        });
+        // Call service layer
+        const company = await companyService.getCompanyById(company_id);
 
-        if (!company) {
+        res.json({ company });
+
+    } catch (error) {
+        console.error('Get company error:', error);
+
+        if (error.message === 'Company not found') {
             return res.status(404).json({
                 error: 'Company not found',
                 message: 'No active company found with this ID'
             });
         }
 
-        res.json({ company });
-
-    } catch (error) {
-        console.error('Get company error:', error);
         res.status(500).json({
             error: 'Internal server error',
             message: 'Error fetching company'
@@ -170,16 +156,8 @@ exports.updateCompany = async (req, res) => {
         const { company_id } = req.params;
         const updates = req.body;
 
-        const company = await Company.findOne({ where: { company_id, is_active: true } });
-
-        if (!company) {
-            return res.status(404).json({
-                error: 'Company not found',
-                message: 'No active company found with this ID'
-            });
-        }
-
-        await company.update(updates);
+        // Call service layer
+        const company = await companyService.updateCompany(company_id, updates);
 
         res.json({
             message: 'Company updated successfully',
@@ -188,6 +166,14 @@ exports.updateCompany = async (req, res) => {
 
     } catch (error) {
         console.error('Update company error:', error);
+
+        if (error.message === 'Company not found') {
+            return res.status(404).json({
+                error: 'Company not found',
+                message: 'No active company found with this ID'
+            });
+        }
+
         res.status(500).json({
             error: 'Internal server error',
             message: 'Error updating company'
@@ -200,16 +186,8 @@ exports.deleteCompany = async (req, res) => {
     try {
         const { company_id } = req.params;
 
-        const company = await Company.findOne({ where: { company_id } });
-
-        if (!company) {
-            return res.status(404).json({
-                error: 'Company not found',
-                message: 'No company found with this ID'
-            });
-        }
-
-        await company.update({ is_active: false });
+        // Call service layer
+        await companyService.deleteCompany(company_id);
 
         res.json({
             message: 'Company deleted successfully'
@@ -217,6 +195,14 @@ exports.deleteCompany = async (req, res) => {
 
     } catch (error) {
         console.error('Delete company error:', error);
+
+        if (error.message === 'Company not found') {
+            return res.status(404).json({
+                error: 'Company not found',
+                message: 'No company found with this ID'
+            });
+        }
+
         res.status(500).json({
             error: 'Internal server error',
             message: 'Error deleting company'
