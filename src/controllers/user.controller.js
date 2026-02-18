@@ -215,7 +215,8 @@ exports.updateUser = async (req, res) => {
             phone_number: req.body.user_phone_no,
             role: req.body.role,
             restaurant_name: req.body.restaurant_name,
-            company_id: req.body.company_id
+            company_id: req.body.company_id,
+            is_active: req.body?.is_active || true
         };
 
         // Call service layer

@@ -58,5 +58,23 @@ module.exports = (sequelize) => {
         ],
     });
 
+    Restaurant.associate = (models) => {
+        Restaurant.belongsTo(models.Company, { foreignKey: 'company_id', as: 'company' });
+        Restaurant.belongsToMany(models.User, {
+            through: models.UserRestaurant,
+            foreignKey: 'restaurant_id',
+            as: 'users'
+        });
+        Restaurant.hasMany(models.Revenue, { foreignKey: 'restaurant_id', as: 'revenues' });
+        Restaurant.hasMany(models.Expense, { foreignKey: 'restaurant_id', as: 'expenses' });
+        Restaurant.hasMany(models.BlueBook, { foreignKey: 'restaurant_id', as: 'blueBooks' });
+
+        // Conditional associations for models that may not exist yet
+        if (models.Pos) Restaurant.hasOne(models.Pos, { foreignKey: 'restaurant_id', as: 'pos' });
+        if (models.Forecast) Restaurant.hasMany(models.Forecast, { foreignKey: 'restaurant_id', as: 'forecasts' });
+        if (models.Target) Restaurant.hasMany(models.Target, { foreignKey: 'restaurant_id', as: 'targets' });
+        if (models.SalesCategory) Restaurant.hasMany(models.SalesCategory, { foreignKey: 'restaurant_id', as: 'salesCategories' });
+    };
+
     return Restaurant;
 };

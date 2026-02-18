@@ -59,5 +59,17 @@ module.exports = (sequelize) => {
         ],
     });
 
+    User.associate = (models) => {
+        User.belongsTo(models.Company, { foreignKey: 'company_id', as: 'company' });
+        User.belongsToMany(models.Restaurant, {
+            through: models.UserRestaurant,
+            foreignKey: 'user_id',
+            as: 'restaurants'
+        });
+        User.hasMany(models.Revenue, { foreignKey: 'user_id', as: 'revenues' });
+        User.hasMany(models.Expense, { foreignKey: 'user_id', as: 'expenses' });
+        User.hasMany(models.BlueBook, { foreignKey: 'user_id', as: 'blueBooks' });
+    };
+
     return User;
 };

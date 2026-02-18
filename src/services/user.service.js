@@ -115,7 +115,7 @@ exports.getAllUsers = async (filters = {}) => {
     try {
         const { company_id, role, userRole, companyId, page = 1, pageSize = 10 } = filters;
 
-        const where = { is_active: true };
+        const where = {};
 
         // Filter by company (unless super admin viewing all)
         if (userRole !== 'Super_Admin') {
@@ -244,7 +244,7 @@ exports.updateUser = async (user_id, updates) => {
         delete updates.user_id;
         delete updates.password;
 
-        const user = await User.findOne({ where: { user_id, is_active: true } });
+        const user = await User.findOne({ where: { user_id } });
 
         if (!user) {
             throw new Error('User not found');

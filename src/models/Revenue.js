@@ -101,5 +101,10 @@ module.exports = (sequelize) => {
         ],
     });
 
+    Revenue.associate = (models) => {
+        Revenue.belongsTo(models.Restaurant, { foreignKey: 'restaurant_id', as: 'restaurant' });
+        Revenue.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' });
+    };
+
     return Revenue;
 };

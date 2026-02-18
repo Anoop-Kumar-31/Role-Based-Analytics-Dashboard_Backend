@@ -81,6 +81,10 @@ module.exports = (sequelize) => {
             type: DataTypes.DECIMAL(10, 2),
             defaultValue: 0,
         },
+        notes_data: {
+            type: DataTypes.JSON,
+            defaultValue: {},
+        },
         is_active: {
             type: DataTypes.BOOLEAN,
             defaultValue: true,
@@ -94,6 +98,20 @@ module.exports = (sequelize) => {
             { unique: true, fields: ['restaurant_id', 'date'] },
         ],
     });
+
+    BlueBook.associate = (models) => {
+        BlueBook.belongsTo(models.Restaurant, { foreignKey: 'restaurant_id', as: 'restaurant' });
+        BlueBook.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' });
+
+        // Conditional associations for sub-resources
+        if (models.Smwe) BlueBook.hasMany(models.Smwe, { foreignKey: 'blue_book_id', as: 'smwes' });
+        if (models.Item86) BlueBook.hasMany(models.Item86, { foreignKey: 'blue_book_id', as: 'item86s' });
+        if (models.Win) BlueBook.hasMany(models.Win, { foreignKey: 'blue_book_id', as: 'wins' });
+        if (models.Miss) BlueBook.hasMany(models.Miss, { foreignKey: 'blue_book_id', as: 'misses' });
+        if (models.StaffNote) BlueBook.hasMany(models.StaffNote, { foreignKey: 'blue_book_id', as: 'staffNotes' });
+        if (models.MaintenanceIssue) BlueBook.hasMany(models.MaintenanceIssue, { foreignKey: 'blue_book_id', as: 'maintenanceIssues' });
+        if (models.MiscNote) BlueBook.hasMany(models.MiscNote, { foreignKey: 'blue_book_id', as: 'miscNotes' });
+    };
 
     return BlueBook;
 };

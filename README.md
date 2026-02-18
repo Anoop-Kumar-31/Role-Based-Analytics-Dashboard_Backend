@@ -1,4 +1,4 @@
-# GetBreadCrumbs Backend - Free Forever Edition
+# RBAC_Dashboard Backend - Free Forever Edition
 
 A PostgreSQL/Supabase-optimized backend forrestaurant operations management, designed for free hosting on Render.
 

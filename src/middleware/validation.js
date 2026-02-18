@@ -70,7 +70,7 @@ const validateRevenue = [
     body('liquor_sale').optional().isDecimal().withMessage('Liquor sale must be a valid number'),
     body('wine_sale').optional().isDecimal().withMessage('Wine sale must be a valid number'),
     body('beverage_sale').optional().isDecimal().withMessage('Beverage sale must be a valid number'),
-    body('bevarage_sale').optional().isDecimal().withMessage('Beverage sale must be a valid number'),  // Handle typo
+    body('beverage_sale').optional().isDecimal().withMessage('Beverage sale must be a valid number'),
     body('other_sale').optional().isDecimal().withMessage('Other sale must be a valid number'),
     body('total_guest').optional().isInt({ min: 0 }).withMessage('Total guest must be a positive integer'),
     body('notes').optional().isString().withMessage('Notes must be a string'),

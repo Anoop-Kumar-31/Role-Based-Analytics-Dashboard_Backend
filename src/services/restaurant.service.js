@@ -211,3 +211,20 @@ exports.getRestaurantIdsByCompanyId = async (company_id) => {
         throw error;
     }
 };
+
+/**
+ * Get restaurant by name
+ * @param {string} restaurant_name - Restaurant name
+ * @returns {Promise<Object>} Restaurant
+ */
+exports.getRestaurantByName = async (restaurant_name) => {
+    try {
+        const restaurant = await Restaurant.findOne({
+            where: { restaurant_name, is_active: true }
+        });
+        return restaurant;
+    } catch (error) {
+        console.error('Get restaurant by name service error:', error);
+        throw error;
+    }
+};

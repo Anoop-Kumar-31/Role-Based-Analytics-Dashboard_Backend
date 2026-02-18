@@ -88,7 +88,7 @@ app.use('/api/v1/location', locationRoutes);
 // Root endpoint
 app.get('/', (req, res) => {
     res.json({
-        message: 'GetBreadCrumbs API - Free Forever Edition',
+        message: 'RBAC_Dashboard API - Free Forever Edition',
         version: '1.0.0',
         endpoints: '/api/v1',
         health: '/health',
@@ -118,6 +118,8 @@ app.use((err, req, res, next) => {
 // Database connection and server start
 let server; // Store server reference for graceful shutdown
 
+const { createSuperAdmin } = require('./src/seeders/createSuperAdmin');
+
 const startServer = async () => {
     try {
         // Test database connection
@@ -129,6 +131,9 @@ const startServer = async () => {
         if (process.env.NODE_ENV === 'development') {
             await db.sequelize.sync({ alter: false });
             console.log('✅ Database models synchronized');
+
+            // Create super admin after sync
+            await createSuperAdmin();
         }
 
         // Start server only if not already running
@@ -146,44 +151,6 @@ const startServer = async () => {
         process.exit(1);
     }
 };
-
-// Graceful shutdown handler
-const gracefulShutdown = async (signal) => {
-    console.log(`\n${signal} received. Closing server gracefully...`);
-
-    if (server) {
-        server.close(async () => {
-            console.log('✅ HTTP server closed');
-
-            try {
-                await db.sequelize.close();
-                console.log('✅ Database connection closed');
-                process.exit(0);
-            } catch (error) {
-                console.error('❌ Error closing database:', error);
-                process.exit(1);
-            }
-        });
-
-        // Force close after 10 seconds
-        setTimeout(() => {
-            console.error('⚠️  Forced shutdown after timeout');
-            process.exit(1);
-        }, 10000);
-    } else {
-        process.exit(0);
-    }
-};
-
-// Handle shutdown signals
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-process.on('SIGINT', () => gracefulShutdown('SIGINT')); // Ctrl+C
-
-
-// Create super_admin if not exists
-
-const { createSuperAdmin } = require('./src/seeders/createSuperAdmin');
-createSuperAdmin();
 
 startServer();
 

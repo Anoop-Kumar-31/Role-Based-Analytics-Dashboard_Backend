@@ -36,6 +36,7 @@ exports.createBlueBook = async (blueBookData) => {
             lbw_sales: blueBookData.lbw_sales || 0,
             hourly_labor: blueBookData.hourly_labor || 0,
             hours_worked: blueBookData.hours_worked || 0,
+            notes_data: blueBookData.notes_data || {},
         });
 
         return blueBook;

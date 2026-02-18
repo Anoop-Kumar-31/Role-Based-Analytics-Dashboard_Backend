@@ -41,5 +41,10 @@ module.exports = (sequelize) => {
         ],
     });
 
+    Company.associate = (models) => {
+        Company.hasMany(models.User, { foreignKey: 'company_id', as: 'users' });
+        Company.hasMany(models.Restaurant, { foreignKey: 'company_id', as: 'restaurants' });
+    };
+
     return Company;
 };

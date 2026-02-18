@@ -172,7 +172,7 @@ FRONTEND_URL=https://your-frontend.vercel.app
 
 6. Deploy!
 
-Your API will be live at: `https://breadcrumbs-api.onrender.com`
+Your API will be live at: `https://RBAC_Dashboard-api.onrender.com`
 
 **See DEPLOYMENT.md for detailed instructions!**
 
