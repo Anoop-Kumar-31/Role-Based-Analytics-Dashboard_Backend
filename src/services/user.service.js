@@ -244,7 +244,6 @@ exports.updateUser = async (user_id, updates) => {
     try {
         // Remove fields that shouldn't be updated directly
         delete updates.user_id;
-        delete updates.password;
 
         const user = await User.findOne({ where: { user_id } });
 

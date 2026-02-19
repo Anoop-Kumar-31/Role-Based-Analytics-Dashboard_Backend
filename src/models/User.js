@@ -66,9 +66,10 @@ module.exports = (sequelize) => {
             foreignKey: 'user_id',
             as: 'restaurants'
         });
-        User.hasMany(models.Revenue, { foreignKey: 'user_id', as: 'revenues' });
+        User.hasMany(models.Revenue, { foreignKey: 'created_by', as: 'revenues' });
         User.hasMany(models.Expense, { foreignKey: 'user_id', as: 'expenses' });
         User.hasMany(models.BlueBook, { foreignKey: 'user_id', as: 'blueBooks' });
+        User.hasMany(models.Invoice, { foreignKey: 'user_id', as: 'invoices' });
     };
 
     return User;

@@ -81,24 +81,53 @@ exports.getAllRevenues = async (req, res) => {
             end_date
         };
 
-        // Only apply company filtering if user_id is provided
-        if (user_id) {
-            const company_id = await userService.getCompanyId(user_id);
+        // Role-based filtering
+        if (req.userRole === 'Restaurant_Employee') {
+            const { UserRestaurant } = require('../models');
 
-            if (company_id) {
-                // Get all restaurant_id array from company_id
-                if (restaurant_id) {
-                    filters.restaurant_id = restaurant_id;
-                } else {
-                    const restaurant_ids = await restaurantService.getRestaurantIdsByCompanyId(company_id);
-                    filters.restaurant_id = restaurant_ids;
+            // Get assigned restaurants
+            const userRestaurants = await UserRestaurant.findAll({
+                where: { user_id: req.userId },
+                attributes: ['restaurant_id']
+            });
+
+            const assignedIds = userRestaurants.map(ur => ur.restaurant_id);
+
+            // If user provided a restaurant_id, ensure it's in their assigned list
+            if (restaurant_id) {
+                if (!assignedIds.includes(restaurant_id)) {
+                    return res.status(403).json({
+                        message: "Access denied: You are not assigned to this restaurant."
+                    });
+                }
+                filters.restaurant_id = restaurant_id;
+            } else {
+                // Otherwise, filter by ALL their assigned restaurants
+                filters.restaurant_id = assignedIds;
+            }
+        }
+        else {
+            // Super Admin / Company Admin logic
+            // Add restaurant filter if provided
+            if (restaurant_id) {
+                filters.restaurant_id = restaurant_id;
+            }
+
+            // Only apply company filtering if user_id is provided
+            if (user_id) {
+                const company_id = await userService.getCompanyId(user_id);
+
+                if (company_id) {
+                    // Get all restaurant_id array from company_id
+                    if (restaurant_id) {
+                        filters.restaurant_id = restaurant_id;
+                    } else {
+                        const restaurant_ids = await restaurantService.getRestaurantIdsByCompanyId(company_id);
+                        filters.restaurant_id = restaurant_ids;
+                    }
                 }
             }
-        } else if (restaurant_id) {
-            // If no user_id but restaurant_id provided (e.g., Super Admin filtering by restaurant)
-            filters.restaurant_id = restaurant_id;
         }
-        // If neither user_id nor restaurant_id provided, Super Admin sees all revenues (no filters)
 
         console.log('Revenue filters:', filters);
 

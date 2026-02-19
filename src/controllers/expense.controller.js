@@ -3,47 +3,42 @@ const expenseService = require('../services/expense.service');
 // Create expense
 exports.createExpense = async (req, res) => {
     try {
-        const {
-            restaurant_id,
-            expense_date,  // Frontend sends expense_date
-            type,          // Frontend sends type (maps to category)
-            vendor_name,
-            invoice_number,
-            description,
-            amounts,       // Frontend may send amounts as JSON string
-            salaryAmount,  // Or specific amount fields
-            ...otherFields
-        } = req.body;
+        const { restaurant_id, restaurant } = req.body;
 
-        // Parse amounts if it's a string
-        let parsedAmounts = {};
-        if (amounts) {
-            parsedAmounts = typeof amounts === 'string' ? JSON.parse(amounts) : amounts;
+        // Resolve restaurant ID if only name is provided (legacy support)
+        let resolvedRestaurantId = restaurant_id;
+        if (!resolvedRestaurantId && restaurant) {
+            // Need to require Restaurant model or service here if not already available
+            // For now, assume restaurant_id is passed or handled in service if we passed 'restaurant' name
+            // But let's do a quick lookup if possible, or just pass it down. 
+            // Better to ensure restaurant_id exists.
+
+            // To be safe, we'll import Restaurant Service if needed, but let's query directly for now if needed, 
+            // or assume frontend sends ID. The user's snippet had "restaurant": "Olive Tree Café".
+
+            // Let's assume the frontend sends ID effectively or we assume the service handles it. 
+            // Actually, the user's snippet had "restaurant" name. 
+            // I should look it up.
+
+            const { Restaurant } = require('../models');
+            const found = await Restaurant.findOne({ where: { restaurant_name: restaurant } });
+            if (found) resolvedRestaurantId = found.restaurant_id;
         }
 
-        // Calculate total amount from amounts object or use specific field
-        let totalAmount = 0;
-        if (salaryAmount) {
-            totalAmount = parseFloat(salaryAmount);
-        } else if (Object.keys(parsedAmounts).length > 0) {
-            totalAmount = Object.values(parsedAmounts).reduce((sum, val) => sum + parseFloat(val || 0), 0);
+        if (!resolvedRestaurantId) {
+            return res.status(400).json({ message: "Missing restaurant_id or valid restaurant name." });
         }
 
-        // Call service layer
-        const expense = await expenseService.createExpense({
-            restaurant_id,
-            user_id: req.userId,
-            category: type,            // Map type to category
-            vendor_name,
-            invoice_number,
-            date: expense_date,       // Map expense_date to date
-            amount: totalAmount,
-            description,
+        // Call service layer with ENTIRE body + user_id + resolved ID
+        const result = await expenseService.createExpense({
+            ...req.body,
+            restaurant_id: resolvedRestaurantId,
+            user_id: req.userId || req.user?.user_id // Handle both middleware patterns
         });
 
         res.status(201).json({
-            message: 'Expense recorded successfully',
-            expense
+            message: 'Expense and invoices created successfully',
+            data: result
         });
 
     } catch (error) {
@@ -71,14 +66,43 @@ exports.getAllExpenses = async (req, res) => {
             pageSize
         };
 
-        // Only add company_id filter if provided (optional for Super Admin)
-        // if (company_id) {
-        //     filters.company_id = company_id;
-        // }
+        // Role-based filtering
+        if (req.userRole === 'Restaurant_Employee') {
+            const { UserRestaurant } = require('../models');
 
-        // Add restaurant filter if provided
-        if (restaurant_id) {
-            filters.restaurant_id = restaurant_id;
+            // Get assigned restaurants
+            const userRestaurants = await UserRestaurant.findAll({
+                where: { user_id: req.userId },
+                attributes: ['restaurant_id']
+            });
+
+            const assignedIds = userRestaurants.map(ur => ur.restaurant_id);
+
+            // If user provided a restaurant_id, ensure it's in their assigned list
+            if (restaurant_id) {
+                if (!assignedIds.includes(restaurant_id)) {
+                    return res.status(403).json({
+                        message: "Access denied: You are not assigned to this restaurant."
+                    });
+                }
+                filters.restaurant_id = restaurant_id;
+            } else {
+                // Otherwise, filter by ALL their assigned restaurants
+                filters.restaurant_id = assignedIds;
+            }
+        }
+        else {
+            // Super Admin / Company Admin logic
+            // Add restaurant filter if provided
+            if (restaurant_id) {
+                filters.restaurant_id = restaurant_id;
+            }
+
+            // Should probably restrict Company Admin to their company's restaurants?
+            // User didn't explicitly ask for this, but it's good practice. 
+            // However, sticking to the specific user request: "if user is company_employee..."
+            // The previous code snippet used: user_service.getUserRestaurants(user_id) for COMPANY_ADMIN too.
+            // But let's stick to the request for now.
         }
 
         console.log('Expense filters:', filters);

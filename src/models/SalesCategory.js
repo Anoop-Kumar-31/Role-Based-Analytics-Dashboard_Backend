@@ -30,5 +30,9 @@ module.exports = (sequelize) => {
         ],
     });
 
+    SalesCategory.associate = (models) => {
+        SalesCategory.hasMany(models.Invoice, { foreignKey: 'sales_category_id', as: 'invoices' });
+    };
+
     return SalesCategory;
 };

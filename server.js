@@ -82,6 +82,9 @@ app.use('/api/v1/onboarding', onboardingRoutes);
 app.use('/api/v1/roles', roleRoutes);
 app.use('/api/v1/location', locationRoutes);
 
+const dashboardRoutes = require('./src/routes/dashboard.routes');
+app.use('/api/v1/dashboard', dashboardRoutes);
+
 // Note: Revenue routes are under /api/v1/restaurants/* path
 // This maintains backward compatibility with existing frontend
 

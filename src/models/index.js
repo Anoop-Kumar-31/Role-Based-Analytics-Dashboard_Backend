@@ -45,6 +45,7 @@ db.UserRestaurant = require("./UserRestaurant.js")(sequelize, Sequelize);
 db.BlueBook = require("./BlueBook.js")(sequelize, Sequelize);
 db.Revenue = require("./Revenue.js")(sequelize, Sequelize);
 db.Expense = require("./Expense.js")(sequelize, Sequelize);
+db.Invoice = require("./Invoice.js")(sequelize, Sequelize);
 
 // Restaurant Operations & Targets
 db.Pos = require("./Pos.js")(sequelize, Sequelize);

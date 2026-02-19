@@ -1,27 +1,129 @@
-const { Expense, Restaurant, User } = require('../models');
+const { Expense, Restaurant, User, SalesCategory, Invoice, sequelize } = require('../models');
 const { Op } = require('sequelize');
 
 /**
- * Create a new expense
- * @param {Object} expenseData - Expense data
- * @returns {Promise<Object>} Created expense
+ * Create a new expense with complex logic for different types
+ * @param {Object} expenseData - Raw expense data from controller
+ * @returns {Promise<Object>} Created expense and invoices
  * @throws {Error} If creation fails
  */
-exports.createExpense = async (expenseData) => {
-    try {
-        const expense = await Expense.create({
-            restaurant_id: expenseData.restaurant_id,
-            user_id: expenseData.user_id,
-            category: expenseData.category,
-            vendor_name: expenseData.vendor_name,
-            invoice_number: expenseData.invoice_number,
-            date: expenseData.date,
-            amount: expenseData.amount,
-            description: expenseData.description,
-        });
+exports.createExpense = async (data) => {
+    const transaction = await sequelize.transaction();
 
-        return expense;
+    try {
+        const {
+            restaurant_id,
+            user_id,
+            type, // Maps to category
+            salaryAmount,
+            oneTimeCategory,
+            oneTimeAmount,
+            otherDetails,
+            otherAmount,
+            expense_date,
+            amounts, // JSON string or object for Invoices
+            vendor_name,
+            invoice_number
+        } = data;
+
+        // 1. Prepare base expense object
+        const expensePayload = {
+            restaurant_id,
+            user_id,
+            category: type,
+            created_by: user_id, // Assuming same for now
+            date: expense_date || new Date(),
+            vendor_name,
+            invoice_number
+        };
+
+        // 2. Handle specific types -> Amount & Description
+        if (type === "Salary") {
+            expensePayload.amount = parseFloat(salaryAmount || 0);
+        }
+        else if (type === "One-Time Expense") {
+            expensePayload.amount = parseFloat(oneTimeAmount || 0);
+            if (oneTimeCategory) expensePayload.description = oneTimeCategory;
+        }
+        else if (type === "Other") {
+            expensePayload.amount = parseFloat(otherAmount || 0);
+            if (otherDetails) expensePayload.description = otherDetails;
+        }
+        else if (type === "Invoice") {
+            expensePayload.amount = 0; // Will calculate if needed, or leave 0 as container
+        }
+        else {
+            // Fallback for generic types
+            expensePayload.amount = parseFloat(data.amount || 0);
+            expensePayload.description = data.description;
+        }
+
+        // 3. Create Expense
+        const createdExpense = await Expense.create(expensePayload, { transaction });
+
+        // 4. Handle Invoices
+        const createdInvoices = [];
+        if (type === "Invoice" && amounts) {
+            let parsedAmounts = amounts;
+            if (typeof amounts === 'string') {
+                try {
+                    parsedAmounts = JSON.parse(amounts);
+                } catch (e) {
+                    throw new Error("Invalid amounts format.");
+                }
+            }
+
+            if (parsedAmounts && Object.keys(parsedAmounts).length > 0) {
+                let totalInvoiceAmount = 0;
+
+                for (const [categoryName, unit_price] of Object.entries(parsedAmounts)) {
+                    const price = parseFloat(unit_price || 0);
+
+                    // Find or create sales category
+                    let salesCategory = await SalesCategory.findOne({
+                        where: { sales_category_name: categoryName, restaurant_id },
+                        transaction
+                    });
+
+                    if (!salesCategory) {
+                        salesCategory = await SalesCategory.create({
+                            sales_category_name: categoryName,
+                            restaurant_id,
+                            is_active: true
+                        }, { transaction });
+                    }
+
+                    // Create Invoice
+                    const invoiceData = {
+                        expense_id: createdExpense.expense_id,
+                        user_id: user_id,
+                        sales_category_id: salesCategory.sales_category_id,
+                        date: expense_date || new Date(),
+                        quantity: 1,
+                        unit_price: price,
+                        tax_price: 0,
+                        created_by: user_id
+                    };
+
+                    const newInvoice = await Invoice.create(invoiceData, { transaction });
+                    createdInvoices.push(newInvoice);
+                    totalInvoiceAmount += price;
+                }
+
+                // Update expense total amount with sum of invoices
+                await createdExpense.update({ amount: totalInvoiceAmount }, { transaction });
+            }
+        }
+
+        await transaction.commit();
+
+        return {
+            expense: createdExpense,
+            invoices: createdInvoices
+        };
+
     } catch (error) {
+        await transaction.rollback();
         console.error('Create expense service error:', error);
         throw error;
     }
@@ -57,9 +159,30 @@ exports.getAllExpenses = async (filters = {}) => {
         const { count, rows } = await Expense.findAndCountAll({
             where,
             include: [
-                { model: Restaurant, as: 'restaurant', attributes: ['restaurant_id', 'restaurant_name'] },
-                { model: User, as: 'user', attributes: ['user_id', 'first_name', 'last_name', 'email'] }
+                {
+                    model: Restaurant,
+                    as: 'restaurant',
+                    attributes: ['restaurant_id', 'restaurant_name']
+                },
+                {
+                    model: User,
+                    as: 'user',
+                    attributes: ['user_id', 'first_name', 'last_name', 'email']
+                },
+                {
+                    model: Invoice,
+                    as: 'invoices',
+                    required: false, // Left join, only if exists
+                    include: [
+                        {
+                            model: SalesCategory,
+                            as: 'salesCategory',
+                            attributes: ['sales_category_id', 'sales_category_name']
+                        }
+                    ]
+                }
             ],
+            distinct: true, // Important for correct count with includes
             limit: parseInt(pageSize),
             offset: parseInt(offset),
             order: [['date', 'DESC']],

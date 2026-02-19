@@ -54,6 +54,7 @@ module.exports = (sequelize) => {
     Expense.associate = (models) => {
         Expense.belongsTo(models.Restaurant, { foreignKey: 'restaurant_id', as: 'restaurant' });
         Expense.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' });
+        Expense.hasMany(models.Invoice, { foreignKey: 'expense_id', as: 'invoices' });
     };
 
     return Expense;
