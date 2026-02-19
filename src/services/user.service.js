@@ -14,7 +14,7 @@ exports.authenticateUser = async (email, password) => {
         // Find user by email
         const user = await User.findOne({
             where: { email, is_active: true },
-            attributes: ['user_id', 'email', 'password', 'first_name', 'last_name', 'role', 'company_id', 'is_blocked']
+            attributes: ['user_id', 'email', 'password', 'first_name', 'phone_number', 'last_name', 'role', 'company_id', 'is_blocked']
         });
 
         if (!user) {
@@ -38,6 +38,7 @@ exports.authenticateUser = async (email, password) => {
                 email: user.email,
                 role: user.role,
                 company_id: user.company_id,
+                phone_number: user.phone_number,
             },
             process.env.JWT_SECRET,
             { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
@@ -55,6 +56,7 @@ exports.authenticateUser = async (email, password) => {
                 last_name: user.last_name,
                 role: user.role,
                 company_id: user.company_id,
+                phone_number: user.phone_number,
             }
         };
     } catch (error) {

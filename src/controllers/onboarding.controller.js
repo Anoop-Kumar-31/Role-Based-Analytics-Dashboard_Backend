@@ -46,7 +46,7 @@ exports.createOnboarding = async (req, res) => {
 
             companyInfo.company_email = companyInfo.company_email || userInfo.email;
             companyInfo.company_phone = userInfo.phone_number;
-            companyInfo.company_location = userInfo.location;
+            // companyInfo.company_location = userInfo?.location;
             companyInfo.is_onboarded = false; // Pending approval
             companyInfo.is_active = true;
 
@@ -67,6 +67,7 @@ exports.createOnboarding = async (req, res) => {
                 restaurantData.company_id = company_id;
                 restaurantData.restaurant_email = restaurantData.restaurant_email || userInfo.email;
                 restaurantData.restaurant_phone = restaurantData.restaurant_phone || userInfo.phone_number;
+                restaurantData.restaurant_location = restaurantData.location || userInfo.location;
 
                 // Extract nested targets before creating restaurant
                 const revenueTargets = restaurantData.revenue_targets || {};
