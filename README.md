@@ -1,201 +1,167 @@
-# RBAC_Dashboard Backend - Free Forever Edition
+# ⚙️ Restaurant Operations Backend
 
-A PostgreSQL/Supabase-optimized backend forrestaurant operations management, designed for free hosting on Render.
+> **Enterprise-Grade Multi-Tenant API Layer** - A high-performance, scalable Node.js backend powering the Restaurant Operations Dashboard with robust RBAC and PostgreSQL optimization.
 
-## 🎯 Features
-
-- ✅ **PostgreSQL Ready** - Optimized for Supabase/Neon free tier
-- ✅ **Zero Cost Hosting** - Configured for Render free tier
-- ✅ **JWT Authentication** - Secure token-based auth
-- ✅ **Role-Based Access Control** - Super Admin, Company Admin, Employee roles
-- ✅ **Multi-Tenant Architecture** - Company and restaurant isolation
-- ✅ **RESTful API** - Clean, documented endpoints
-- ✅ **Production Ready** - Error handling, validation, security
-
-## 📋 Tech Stack
-
-- **Runtime**: Node.js 18+
-- **Framework**: Express.js
-- **Database**: PostgreSQL (Supabase compatible)
-- **ORM**: Sequelize
-- **Authentication**: JWT + bcrypt
-- **Validation**: express-validator
-
-## 🚀 Quick Start
-
-### Local Development
-
-1. **Install Dependencies**
-```bash
-npm install
-```
-
-2. **Setup Environment**
-```bash
-cp .env.example .env
-# Edit .env with your database credentials
-```
-
-3. **Run Database**
-```bash
-# Option 1: Use Docker
-docker run --name postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres:15-alpine
-
-# Option 2: Use local PostgreSQL
-# Make sure PostgreSQL is running on port 5432
-```
-
-4. **Create Database**
-```bash
-createdb breadcrumbs_dev
-```
-
-5. **Start Server**
-```bash
-npm run dev
-```
-
-Server will run on `http://localhost:8080`
-
-## 🗄️ Database Setup
-
-### For Production (Supabase)
-
-1. Create account at [supabase.com](https://supabase.com)
-2. Create new project
-3. Get connection string from Settings → Database
-4. Update `.env` with Supabase credentials:
-
-```env
-NODE_ENV=production
-DATABASE_URL=postgresql://postgres:[PASSWORD]@db.[PROJECT].supabase.co:5432/postgres
-```
-
-### Database Migration
-
-The app will auto-sync models in development. For production, use migrations:
-
-```bash
-# Generate migration
-npx sequelize-cli migration:generate --name init-database
-
-# Run migrations
-npm run migrate
-```
-
-## 📝 API Endpoints
-
-### Authentication
-- `POST /api/v1/users/signin` - Login
-
-### Users
-- `POST /api/v1/users` - Create user (Admin only)
-- `GET /api/v1/users` - Get all users
-- `GET /api/v1/users/:id` - Get user by ID
-- `PUT /api/v1/users/:id` - Update user
-- `DELETE /api/v1/users/:id` - Delete user
-
-### Companies
-- `POST /api/v1/companies` - Create company
-- `GET /api/v1/companies/onboarded` - Get onboarded companies
-- `GET /api/v1/companies/pending-onboarding` - Get pending (Super Admin)
-- `PATCH /api/v1/onboarding/onboard/:id` - Approve company
-- `PATCH /api/v1/onboarding/reject/:id` - Reject company
-
-### Restaurants
-- `POST /api/v1/restaurants` - Create restaurant
-- `GET /api/v1/restaurants/by-company/:company_id` - Get by company
-- `GET /api/v1/restaurants/:id` - Get by ID
-- `PUT /api/v1/restaurants/:id` - Update restaurant
-- `DELETE /api/v1/restaurants/:id` - Delete restaurant
-
-### Revenue
-- `POST /api/v1/restaurants/:id/revenue` - Create revenue entry
-- `GET /api/v1/restaurants/revenue/all` - Get all revenues
-- `PUT /api/v1/restaurants/revenue/:id` - Update revenue
-- `DELETE /api/v1/restaurants/revenue/:id` - Delete revenue
-
-### Expenses
-- `POST /api/v1/expense` - Create expense
-- `GET /api/v1/expense` - Get all expenses
-- `PUT /api/v1/expense/:id` - Update expense
-- `DELETE /api/v1/expense/:id` - Delete expense
-
-### Blue Book
-- `POST /api/v1/blue-book` - Create entry
-- `GET /api/v1/blue-book/:restaurant_id/:date` - Get by date
-- `PUT /api/v1/blue-book/:id` - Update entry
-- `DELETE /api/v1/blue-book/:id` - Delete entry
-
-## 🔐 Authentication
-
-All endpoints except `/users/signin` and `/companies` (for onboarding) require authentication.
-
-**Headers**:
-```
-x-access-token: YOUR_JWT_TOKEN
-```
-
-**Roles**:
-- `Super_Admin` - Full system access
-- `Company_Admin` - Company and restaurant management
-- `Restaurant_Employee` - Basic operations
-
-## 🚀 Deployment
-
-### Deploy to Render (Free)
-
-1. Push code to GitHub
-2. Create account at [render.com](https://render.com)
-3. Create new Web Service
-4. Connect GitHub repository
-5. Configure:
-   - **Build Command**: `npm install`
-   - **Start Command**: `npm start`
-   - **Environment Variables**: Add from `.env.example`
-6. Deploy!
-
-### Environment Variables for Render
-
-```env
-NODE_ENV=production
-DATABASE_URL=your_supabase_connection_string
-JWT_SECRET=generate_random_32_char_string
-FRONTEND_URL=https://your-frontend.vercel.app
-```
-
-## 📊 Database Models
-
-- **User** - User accounts with roles
-- **Company** - Restaurant companies/organizations
-- **Restaurant** - Individual restaurant locations
-- **UserRestaurant** - User-restaurant associations
-- **Revenue** - Daily revenue tracking
-- **Expense** - Expense tracking
-- **BlueBook** - Daily operational logs
-
-## 🔧 Scripts
-
-```bash
-npm start          # Start production server
-npm run dev        # Start development server with nodemon
-npm run migrate    # Run database migrations
-```
-
-## 💡 Tips for Free Tier
-
-1. **Keep Backend Warm**: Use [UptimeRobot](https://uptimerobot.com) (free) to ping `/health` every 5 minutes
-2. **Connection Pooling**: Already configured for optimal free tier usage
-3. **Database Size**: 500 MB on Supabase is enough for ~100,000 rows
-
-## 🤝 Contributing
-
-This is a portfolio project, but feedback welcome!
-
-## 📄 License
-
-MIT
+[![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=nodedotjs&logoColor=white&style=for-the-badge)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express-4.18.2-000000?logo=express&logoColor=white&style=for-the-badge)](https://expressjs.com/)
+[![Sequelize](https://img.shields.io/badge/Sequelize-6.37.7-52B0E7?logo=sequelize&logoColor=white&style=for-the-badge)](https://sequelize.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?logo=postgresql&logoColor=white&style=for-the-badge)](https://www.postgresql.org/)
+[![JWT](https://img.shields.io/badge/JWT-Secure-000000?logo=json-web-tokens&logoColor=white&style=for-the-badge)](https://jwt.io/)
+[![Render](https://img.shields.io/badge/Render-Deployed-430098?logo=render&logoColor=white&style=for-the-badge)](https://render.com/)
 
 ---
 
-**Built for free forever hosting** 🎉
+## 📖 Overview
+
+The **Restaurant Operations Backend** is the core intelligence layer for a sophisticated multi-tenant SaaS application. It manages complex role-based access control, restaurant data isolation, and detailed financial tracking (Revenue, Expenses, BlueBook P&L) for restaurant groups.
+
+Engineered for **security and developer experience**, it utilizes an optimized Sequelize ORM layer compatible with both local PostgreSQL and cloud-native solutions like Supabase.
+
+---
+
+## ✨ Key Features
+
+### 🏦 Multi-Tenant Security
+- **Domain-Isolated Data**: Strict company-level and restaurant-level data isolation.
+- **Advanced RBAC**: Granular permissions for `Super_Admin`, `Company_Admin`, and `Restaurant_Employee`.
+- **JWT Authentication**: Secure, stateless session management with token-based authorization.
+
+### 🍽️ Operational Intelligence
+- **BlueBook Engine**: Sophisticated logging system for daily operational notes and P&L data.
+- **Financial Tracking**: Specialized modules for complex invoice management and revenue entry.
+- **Hierarchy Mapping**: Deep relationship mapping between Users, Companies, and Restaurants.
+
+### 🛠️ Production Ready
+- **Auto-Sync Logic**: Smart database synchronization for accelerated development.
+- **Error Orchestration**: Centralized global error handling and validation middleware.
+- **Free-Tier Optimized**: Highly efficient resource usage designed for zero-cost hosting environments.
+
+---
+
+## 🛠 Tech Stack
+
+| Layer | Technologies |
+| :--- | :--- |
+| **Runtime** | Node.js 18+ |
+| **Framework** | Express.js |
+| **ORM** | Sequelize (PostgreSQL) |
+| **Auth** | JWT / bcrypt |
+| **Validation** | express-validator |
+| **Security** | Helmet, CORS, Compression |
+
+---
+
+## 📂 Project Architecture
+
+```bash
+backend_folder/
+├── src/
+│   ├── config/            # Database initialization
+│   ├── controllers/       # Request handlers & Business logic
+│   ├── middleware/        # Auth (RBAC), Validation, Error handling
+│   ├── models/            # Sequelize schema definitions
+│   ├── routes/            # Modular endpoint definitions
+│   ├── services/          # Data access layer & Complex logic
+│   └── seeders/           # Initial data population
+├── server.js              # Application entry point
+├── package.json           # Dependency manifest
+└── .env.example           # Environment blueprint
+```
+
+---
+
+## 🚀 Quick Start
+
+### 📋 Prerequisites
+- **Node.js** 18.x or later
+- **Docker** installed and running
+- **Git** (for cloning the repository)
+- **PostgreSQL** 14+ (if not using Docker)
+
+---
+
+## 🐘 PostgreSQL Setup (First Time Only)
+
+### Step 1: Create PostgreSQL Container
+Run this command to create a new PostgreSQL container:
+```bash
+docker run --name RBAC_Dashboard-postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres:15-alpine
+```
+
+### Step 2: Create Development Database
+Once the container is running, create the database:
+```bash
+docker exec -it RBAC_Dashboard-postgres psql -U postgres -c "CREATE DATABASE rbac_dashboard_dev;"
+```
+
+✅ You only need to run these commands **once** during initial setup!
+
+---
+
+## 🚀 Super Admin Account
+When you start the server for the first time, a Super Admin account will be created automatically:
+
+**Credentials:**
+- **Email**: `superAdmin@dashboard.com`
+- **Password**: `**********`
+- **Role**: `Super_Admin`
+
+> ⚠️ **Security Note**: Change this password in production! This is a default development account.
+
+---
+
+## 🏃 Daily Development Workflow
+
+### 1. Start the Database
+```bash
+docker start breadcrumbs-postgres
+```
+
+### 2. Basic Installation
+```bash
+# Navigate to backend and install dependencies
+cd backend_folder
+npm install
+```
+
+### 3. Setup Environment
+```bash
+cp .env.example .env
+# Configure JWT_SECRET and ensure DATABASE_URL points to localhost:5432
+```
+
+### 4. Running Locally
+```bash
+# Start development server
+npm run dev
+
+# Run migrations (Optional)
+npm run migrate
+```
+Server runs at `http://localhost:8080`.
+
+---
+
+## 📝 API Overview (v1)
+
+### 🔐 Auth & Identity
+- `POST /api/v1/users/signin` - Secure authentication.
+- `GET /api/v1/users` - User directory (Admin only).
+
+### 🏢 Tenant Management
+- `POST /api/v1/companies` - Onboarding entry point.
+- `PATCH /api/v1/onboarding/onboard/:id` - Global approval (Super Admin).
+
+### 📊 Financial Operations
+- `GET /api/v1/restaurants/revenue/all` - Centralized sales tracking.
+- `POST /api/v1/expense` - Smart expense/invoice ingestion.
+- `GET /api/v1/blue-book/:restaurant_id/:date` - P&L operational logs.
+
+---
+
+## 👨💻 Author - **Anoop Kumar**
+- **GitHub**: [@Anoop-Kumar-31](https://github.com/Anoop-Kumar-31)
+- **Portfolio**: [Anoop Kumar Portfolio](https://myportfolio-kto7.onrender.com/)
+
+---
+*Created for portfolio demonstration purposes.*
