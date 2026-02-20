@@ -1,18 +1,37 @@
-const { BlueBook, Restaurant, User } = require('../models');
+const { BlueBook, Item86, MiscNote, StaffNote, CallOut, MaintenanceIssue, Miss, Win, sequelize, Restaurant, User } = require("../models");
+const item86Service = require("./item86.service");
+const miscNoteService = require("./miscNote.service");
+const staffNoteService = require("./staffNote.service");
+const callOutService = require("./callOut.service");
+const maintenanceIssueService = require("./maintenanceIssue.service");
+const missService = require("./miss.service");
+const winService = require("./win.service");
 
 /**
  * Create a new BlueBook entry
- * @param {Object} blueBookData - BlueBook data
+ * @param {Object} data - BlueBook data
  * @returns {Promise<Object>} Created BlueBook entry
- * @throws {Error} If duplicate entry exists or creation fails
  */
-exports.createBlueBook = async (blueBookData) => {
+const createBlueBook = async (data) => {
+    const transaction = await sequelize.transaction();
     try {
+        const {
+            item86s = [],
+            miscNotes = [],
+            staffNotes = [],
+            callOuts = [],
+            maintenanceIssues = [],
+            misses = [],
+            wins = [],
+            ...blueBookData
+        } = data;
+
         // Check if entry already exists for this date
         const existingEntry = await BlueBook.findOne({
             where: {
                 restaurant_id: blueBookData.restaurant_id,
-                date: blueBookData.date
+                date: blueBookData.date,
+                is_active: true
             }
         });
 
@@ -20,28 +39,27 @@ exports.createBlueBook = async (blueBookData) => {
             throw new Error('Entry already exists for this date');
         }
 
-        const blueBook = await BlueBook.create({
-            restaurant_id: blueBookData.restaurant_id,
-            user_id: blueBookData.user_id,
-            date: blueBookData.date,
-            weather: blueBookData.weather,
-            breakfast_sales: blueBookData.breakfast_sales || 0,
-            breakfast_guests: blueBookData.breakfast_guests || 0,
-            lunch_sales: blueBookData.lunch_sales || 0,
-            lunch_guests: blueBookData.lunch_guests || 0,
-            dinner_sales: blueBookData.dinner_sales || 0,
-            dinner_guests: blueBookData.dinner_guests || 0,
-            total_sales: blueBookData.total_sales || 0,
-            food_sales: blueBookData.food_sales || 0,
-            lbw_sales: blueBookData.lbw_sales || 0,
-            hourly_labor: blueBookData.hourly_labor || 0,
-            hours_worked: blueBookData.hours_worked || 0,
-            notes_data: blueBookData.notes_data || {},
-        });
+        // Create Main Entry
+        const blueBook = await BlueBook.create(blueBookData, { transaction });
+        const blueBookId = blueBook.blue_book_id;
 
-        return blueBook;
+        // Create Sub Entries
+        await Promise.all([
+            ...item86s.map(item => item86Service.createItem86({ ...item, item86_comment: item.comment, blue_book_id: blueBookId }, transaction)),
+            ...miscNotes.map(item => miscNoteService.createMiscNote({ ...item, misc_notes_comment: item.comment, blue_book_id: blueBookId }, transaction)),
+            ...staffNotes.map(item => staffNoteService.createStaffNote({ ...item, staff_notes_comment: item.comment, blue_book_id: blueBookId }, transaction)),
+            ...callOuts.map(item => callOutService.createCallOut({ ...item, call_out_comment: item.comment, blue_book_id: blueBookId }, transaction)),
+            ...maintenanceIssues.map(item => maintenanceIssueService.createMaintenanceIssue({ ...item, maintenance_issue_comment: item.comment, blue_book_id: blueBookId }, transaction)),
+            ...misses.map(item => missService.createMiss({ ...item, misses_comment: item.comment, blue_book_id: blueBookId }, transaction)),
+            ...wins.map(item => winService.createWin({ ...item, wins_comment: item.comment, blue_book_id: blueBookId }, transaction))
+        ]);
+
+        await transaction.commit();
+
+        // Fetch complete record
+        return await getBlueBookByDate(blueBookData.restaurant_id, blueBookData.date);
     } catch (error) {
-        console.error('Create BlueBook service error:', error);
+        if (transaction) await transaction.rollback();
         throw error;
     }
 };
@@ -51,70 +69,111 @@ exports.createBlueBook = async (blueBookData) => {
  * @param {string} restaurant_id - Restaurant ID
  * @param {string} date - Date (YYYY-MM-DD)
  * @returns {Promise<Object>} BlueBook entry with relationships
- * @throws {Error} If entry not found
  */
-exports.getBlueBookByDate = async (restaurant_id, date) => {
-    try {
-        const blueBook = await BlueBook.findOne({
-            where: { restaurant_id, date, is_active: true },
-            include: [
-                { model: Restaurant, as: 'restaurant' },
-                { model: User, as: 'user', attributes: ['user_id', 'first_name', 'last_name'] }
-            ],
-        });
-
-        if (!blueBook) {
-            throw new Error('BlueBook entry not found');
-        }
-
-        return blueBook;
-    } catch (error) {
-        console.error('Get BlueBook by date service error:', error);
-        throw error;
-    }
+const getBlueBookByDate = async (restaurant_id, date) => {
+    return await BlueBook.findAll({
+        where: { restaurant_id, date, is_active: true },
+        include: [
+            { model: Item86, as: 'item86s' },
+            { model: MiscNote, as: 'miscNotes' },
+            { model: StaffNote, as: 'staffNotes' },
+            { model: CallOut, as: 'callOuts' },
+            { model: MaintenanceIssue, as: 'maintenanceIssues' },
+            { model: Miss, as: 'misses' },
+            { model: Win, as: 'wins' },
+            { model: Restaurant, as: 'restaurant' },
+            { model: User, as: 'user', attributes: ['user_id', 'first_name', 'last_name', 'email'] }
+        ]
+    });
 };
 
 /**
  * Update BlueBook entry
  * @param {string} blue_book_id - BlueBook ID
- * @param {Object} updates - Fields to update
+ * @param {Object} data - Fields to update
  * @returns {Promise<Object>} Updated BlueBook entry
- * @throws {Error} If entry not found
  */
-exports.updateBlueBook = async (blue_book_id, updates) => {
+const updateBlueBook = async (blueBookId, data) => {
+    const transaction = await sequelize.transaction();
     try {
-        const blueBook = await BlueBook.findOne({ where: { blue_book_id, is_active: true } });
+        const {
+            item86s,
+            miscNotes,
+            staffNotes,
+            callOuts,
+            maintenanceIssues,
+            misses,
+            wins,
+            ...blueBookData
+        } = data;
 
-        if (!blueBook) {
-            throw new Error('BlueBook entry not found');
+        // Check if entry exists
+        const existing = await BlueBook.findByPk(blueBookId);
+        if (!existing) throw new Error('BlueBook entry not found');
+
+        // Update Main Entry
+        await BlueBook.update(blueBookData, {
+            where: { blue_book_id: blueBookId },
+            transaction
+        });
+
+        // Helper to update sub-entries: Delete all and recreate
+        if (item86s) {
+            await Item86.destroy({ where: { blue_book_id: blueBookId }, transaction });
+            await Promise.all(item86s.map(item => item86Service.createItem86({ ...item, item86_comment: item.comment, blue_book_id: blueBookId }, transaction)));
+        }
+        if (miscNotes) {
+            await MiscNote.destroy({ where: { blue_book_id: blueBookId }, transaction });
+            await Promise.all(miscNotes.map(item => miscNoteService.createMiscNote({ ...item, misc_notes_comment: item.comment, blue_book_id: blueBookId }, transaction)));
+        }
+        if (staffNotes) {
+            await StaffNote.destroy({ where: { blue_book_id: blueBookId }, transaction });
+            await Promise.all(staffNotes.map(item => staffNoteService.createStaffNote({ ...item, staff_notes_comment: item.comment, blue_book_id: blueBookId }, transaction)));
+        }
+        if (callOuts) {
+            await CallOut.destroy({ where: { blue_book_id: blueBookId }, transaction });
+            await Promise.all(callOuts.map(item => callOutService.createCallOut({ ...item, call_out_comment: item.comment, blue_book_id: blueBookId }, transaction)));
+        }
+        if (maintenanceIssues) {
+            await MaintenanceIssue.destroy({ where: { blue_book_id: blueBookId }, transaction });
+            await Promise.all(maintenanceIssues.map(item => maintenanceIssueService.createMaintenanceIssue({ ...item, maintenance_issue_comment: item.comment, blue_book_id: blueBookId }, transaction)));
+        }
+        if (misses) {
+            await Miss.destroy({ where: { blue_book_id: blueBookId }, transaction });
+            await Promise.all(misses.map(item => missService.createMiss({ ...item, misses_comment: item.comment, blue_book_id: blueBookId }, transaction)));
+        }
+        if (wins) {
+            await Win.destroy({ where: { blue_book_id: blueBookId }, transaction });
+            await Promise.all(wins.map(item => winService.createWin({ ...item, wins_comment: item.comment, blue_book_id: blueBookId }, transaction)));
         }
 
-        await blueBook.update(updates);
+        await transaction.commit();
 
-        return blueBook;
+        // We need restaurant_id and date for getBlueBookByDate. The updated instance might not have them if they weren't in payload.
+        // So use existing record's details.
+        const updatedBlueBook = await BlueBook.findByPk(blueBookId);
+        return await getBlueBookByDate(updatedBlueBook.restaurant_id, updatedBlueBook.date);
+
     } catch (error) {
-        console.error('Update BlueBook service error:', error);
+        if (transaction) await transaction.rollback();
         throw error;
     }
 };
 
 /**
  * Delete BlueBook entry (soft delete)
- * @param {string} blue_book_id - BlueBook ID
+ * @param {string} blueBookId - BlueBook ID
  * @returns {Promise<void>}
- * @throws {Error} If entry not found
  */
-exports.deleteBlueBook = async (blue_book_id) => {
-    try {
-        const blueBook = await BlueBook.findOne({ where: { blue_book_id } });
+const deleteBlueBook = async (blueBookId) => {
+    return await BlueBook.update({ is_active: false }, {
+        where: { blue_book_id: blueBookId }
+    });
+};
 
-        if (!blueBook) {
-            throw new Error('BlueBook entry not found');
-        }
-
-        await blueBook.update({ is_active: false });
-    } catch (error) {
-        console.error('Delete BlueBook service error:', error);
-        throw error;
-    }
+module.exports = {
+    createBlueBook,
+    getBlueBookByDate,
+    updateBlueBook,
+    deleteBlueBook
 };

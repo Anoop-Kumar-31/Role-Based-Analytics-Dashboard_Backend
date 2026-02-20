@@ -111,6 +111,7 @@ module.exports = (sequelize) => {
         if (models.StaffNote) BlueBook.hasMany(models.StaffNote, { foreignKey: 'blue_book_id', as: 'staffNotes' });
         if (models.MaintenanceIssue) BlueBook.hasMany(models.MaintenanceIssue, { foreignKey: 'blue_book_id', as: 'maintenanceIssues' });
         if (models.MiscNote) BlueBook.hasMany(models.MiscNote, { foreignKey: 'blue_book_id', as: 'miscNotes' });
+        if (models.CallOut) BlueBook.hasMany(models.CallOut, { foreignKey: 'blue_book_id', as: 'callOuts' });
     };
 
     return BlueBook;

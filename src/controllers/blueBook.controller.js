@@ -55,6 +55,13 @@ exports.createBlueBook = async (req, res) => {
             hourly_labor: hourlyLabor || hourly_labor,
             hours_worked: hoursWorked || hours_worked,
             notes_data: notesData || notes_data,
+            item86s: req.body.item86s,
+            miscNotes: req.body.miscNotes,
+            staffNotes: req.body.staffNotes,
+            callOuts: req.body.callOuts,
+            maintenanceIssues: req.body.maintenanceIssues,
+            misses: req.body.misses,
+            wins: req.body.wins
         });
 
         res.status(201).json({

@@ -46,6 +46,13 @@ db.BlueBook = require("./BlueBook.js")(sequelize, Sequelize);
 db.Revenue = require("./Revenue.js")(sequelize, Sequelize);
 db.Expense = require("./Expense.js")(sequelize, Sequelize);
 db.Invoice = require("./Invoice.js")(sequelize, Sequelize);
+db.Item86 = require("./Item86.js")(sequelize, Sequelize);
+db.MiscNote = require("./MiscNote.js")(sequelize, Sequelize);
+db.StaffNote = require("./StaffNote.js")(sequelize, Sequelize);
+db.CallOut = require("./CallOut.js")(sequelize, Sequelize);
+db.MaintenanceIssue = require("./MaintenanceIssue.js")(sequelize, Sequelize);
+db.Miss = require("./Miss.js")(sequelize, Sequelize);
+db.Win = require("./Win.js")(sequelize, Sequelize);
 
 // Restaurant Operations & Targets
 db.Pos = require("./Pos.js")(sequelize, Sequelize);
