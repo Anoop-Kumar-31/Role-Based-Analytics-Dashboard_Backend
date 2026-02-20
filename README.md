@@ -6,6 +6,7 @@
 [![Express](https://img.shields.io/badge/Express-4.18.2-000000?logo=express&logoColor=white&style=for-the-badge)](https://expressjs.com/)
 [![Sequelize](https://img.shields.io/badge/Sequelize-6.37.7-52B0E7?logo=sequelize&logoColor=white&style=for-the-badge)](https://sequelize.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?logo=postgresql&logoColor=white&style=for-the-badge)](https://www.postgresql.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-Database-3ECF8E?logo=supabase&logoColor=white&style=for-the-badge)](https://supabase.com/)
 [![JWT](https://img.shields.io/badge/JWT-Secure-000000?logo=json-web-tokens&logoColor=white&style=for-the-badge)](https://jwt.io/)
 [![Render](https://img.shields.io/badge/Render-Deployed-430098?logo=render&logoColor=white&style=for-the-badge)](https://render.com/)
 
@@ -44,7 +45,8 @@ Engineered for **security and developer experience**, it utilizes an optimized S
 | :--- | :--- |
 | **Runtime** | Node.js 18+ |
 | **Framework** | Express.js |
-| **ORM** | Sequelize (PostgreSQL) |
+| **Database** | Supabase (PostgreSQL 15) |
+| **ORM** | Sequelize |
 | **Auth** | JWT / bcrypt |
 | **Validation** | express-validator |
 | **Security** | Helmet, CORS, Compression |
@@ -78,11 +80,17 @@ backend_folder/
 - **Git** (for cloning the repository)
 - **PostgreSQL** 14+ (if not using Docker)
 
----
+## 🗄️ Database Setup
 
-## 🐘 PostgreSQL Setup (First Time Only)
+### Option A: Using Supabase (Recommended for Production)
+1. Create a project at [Supabase](https://supabase.com/).
+2. Copy your **Transaction Connection String** or **Session Connection String** from the Database settings.
+3. Add it to your `.env` file as `DATABASE_URL`.
 
-### Step 1: Create PostgreSQL Container
+### Option B: Local PostgreSQL (Using Docker)
+If you prefer to run the database locally:
+
+#### Step 1: Create PostgreSQL Container
 Run this command to create a new PostgreSQL container:
 ```bash
 docker run --name RBAC_Dashboard-postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres:15-alpine
