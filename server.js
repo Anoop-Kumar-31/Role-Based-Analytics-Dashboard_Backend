@@ -8,6 +8,12 @@ const db = require('./src/models');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
+const isProd = process.env.NODE_ENV === 'production';
+
+// Trust proxy for secure cookies and accurate IP addresses in production
+if (isProd) {
+    app.set('trust proxy', 1);
+}
 
 
 // Security middleware
@@ -18,9 +24,7 @@ const corsOptions = {
     origin: function (origin, callback) {
         const allowedOrigins = [
             'http://localhost:3000',
-            process.env.FRONTEND_URL,
-            /\.vercel\.app$/,  // Allow all Vercel deployments
-            /\.netlify\.app$/,  // Allow all Netlify deployments
+            process.env.FRONTEND_URL
         ];
 
         if (!origin || allowedOrigins.some(allowed => {
@@ -128,7 +132,10 @@ const startServer = async () => {
         // Test database connection
         await db.sequelize.authenticate();
         console.log('✅ Database connected successfully');
-        console.log(`📊 Database: ${process.env.DB_NAME}@${process.env.DB_HOST}`);
+
+        if (!isProd) {
+            console.log(`📊 Database: ${process.env.DB_NAME}@${process.env.DB_HOST}`);
+        }
 
         // Sync models (always in development, only if requested or if tables missing in production)
         // For production, we'll sync but without { alter: true } by default unless FORCE_DB_SYNC is set
@@ -145,10 +152,18 @@ const startServer = async () => {
         // Start server only if not already running
         if (!server) {
             server = app.listen(PORT, () => {
+                const protocol = isProd ? 'https' : 'http';
+                const host = isProd ? (process.env.RENDER_EXTERNAL_HOSTNAME || 'production-server') : 'localhost';
+
                 console.log(`\n🚀 Server running on port ${PORT}`);
-                console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
-                console.log(`🔗 API: http://localhost:${PORT}/api/v1`);
-                console.log(`❤️  Health: http://localhost:${PORT}/health\n`);
+                console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+                if (!isProd) {
+                    console.log(`🔗 API: http://localhost:${PORT}/api/v1`);
+                    console.log(`❤️  Health: http://localhost:${PORT}/health\n`);
+                } else {
+                    console.log(`🔗 API Base: /api/v1`);
+                    console.log(`❤️  Status: Online\n`);
+                }
             });
         }
 
@@ -159,5 +174,28 @@ const startServer = async () => {
 };
 
 startServer();
+
+// Graceful shutdown
+const gracefulShutdown = async () => {
+    console.log('\n🛑 Shutting down gracefully...');
+    if (server) {
+        server.close(async () => {
+            console.log('📡 HTTP server closed.');
+            try {
+                await db.sequelize.close();
+                console.log('🗄️  Database connection closed.');
+                process.exit(0);
+            } catch (err) {
+                console.error('❌ Error during database shutdown:', err);
+                process.exit(1);
+            }
+        });
+    } else {
+        process.exit(0);
+    }
+};
+
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);
 
 module.exports = app;
