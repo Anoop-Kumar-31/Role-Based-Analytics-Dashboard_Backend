@@ -1,31 +1,37 @@
-const { Sequelize } = require('sequelize');
-require('dotenv').config();
+const { Sequelize } = require("sequelize");
+require("dotenv").config();
 
-const env = process.env.NODE_ENV || 'development';
+const env = process.env.NODE_ENV || "development";
 
 let sequelize;
 
-if (env === 'production') {
-    // Production: Use DATABASE_URL from Supabase/Neon
-    const DATABASE_URL = process.env.DATABASE_URL ||
-        `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`;
+if (env === "production") {
+    const DATABASE_URL = process.env.DATABASE_URL;
+
+    if (!DATABASE_URL) {
+        throw new Error("❌ DATABASE_URL missing in production");
+    }
 
     sequelize = new Sequelize(DATABASE_URL, {
-        dialect: 'postgres',
+        dialect: "postgres",
+
         dialectOptions: {
             ssl: {
                 require: true,
-                rejectUnauthorized: false, // Required for Supabase/Neon
+                rejectUnauthorized: false,
             },
         },
+
         pool: {
-            max: 5,       // Max connections (free tier limit)
-            min: 0,       // Min connections
-            acquire: 30000, // Max time to get connection
-            idle: 10000,    // Max idle time before release
+            max: 5,
+            min: 0,
+            acquire: 30000,
+            idle: 10000,
         },
+
         logging: false,
     });
+
 } else {
     // Development: Use individual credentials
     sequelize = new Sequelize({
