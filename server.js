@@ -130,14 +130,17 @@ const startServer = async () => {
         console.log('✅ Database connected successfully');
         console.log(`📊 Database: ${process.env.DB_NAME}@${process.env.DB_HOST}`);
 
-        // Sync models (use migrations in production)
-        if (process.env.NODE_ENV === 'development') {
-            await db.sequelize.sync({ alter: false });
-            console.log('✅ Database models synchronized');
+        // Sync models (always in development, only if requested or if tables missing in production)
+        // For production, we'll sync but without { alter: true } by default unless FORCE_DB_SYNC is set
+        const syncOptions = {
+            alter: process.env.NODE_ENV === 'development' || process.env.FORCE_DB_SYNC === 'true'
+        };
 
-            // Create super admin after sync
-            await createSuperAdmin();
-        }
+        await db.sequelize.sync(syncOptions);
+        console.log('✅ Database models synchronized');
+
+        // Create super admin after sync
+        await createSuperAdmin();
 
         // Start server only if not already running
         if (!server) {
