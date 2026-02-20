@@ -1,29 +1,8 @@
-const config = require("../../config/config.json");
 const Sequelize = require("sequelize");
-// Logger not available in this context yet, using console
-// const { logger } = require("../logger/logger.js");
+const sequelize = require("../config/database");
 
 console.log("Initializing Sequelize...");
 
-const env = process.env.NODE_ENV || 'development';
-const dbConfig = config[env];
-
-const sequelize = new Sequelize(
-    dbConfig.database,
-    dbConfig.username,
-    dbConfig.password,
-    {
-        host: dbConfig.host,
-        dialect: dbConfig.dialect,
-        logging: false, // console.log
-        pool: {
-            max: 5,
-            min: 0,
-            acquire: 30000,
-            idle: 10000,
-        },
-    }
-);
 
 const db = {};
 
