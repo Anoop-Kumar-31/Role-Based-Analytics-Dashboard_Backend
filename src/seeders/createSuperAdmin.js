@@ -4,7 +4,13 @@ const { User } = require('../models');
 // Create default super admin user
 const createSuperAdmin = async () => {
     try {
-        const superAdminEmail = 'superAdmin@dashboard.com';
+        const superAdminEmail = process.env.SUPER_ADMIN_EMAIL || 'superAdmin@dashboard.com';
+        const superAdminPassword = process.env.SUPER_ADMIN_PASSWORD;
+
+        if (!superAdminPassword) {
+            console.log('ℹ️  Super Admin password not found');
+            return;
+        }
 
         // Check if super admin already exists
         const existingAdmin = await User.findOne({
@@ -21,7 +27,7 @@ const createSuperAdmin = async () => {
             first_name: 'Super',
             last_name: 'Admin',
             email: superAdminEmail,
-            password: 'super@admin',
+            password: superAdminPassword,
             phone_number: '0000000000',
             role: 'Super_Admin',
             company_id: null,
@@ -31,7 +37,6 @@ const createSuperAdmin = async () => {
 
         console.log('✅ Super Admin created successfully');
         console.log(`   Email: ${superAdminEmail}`);
-        console.log(`   Password: super@admin`);
         console.log(`   Role: Super_Admin`);
 
         return superAdmin;

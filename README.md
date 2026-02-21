@@ -12,6 +12,16 @@
 
 ---
 
+## 🚀 Live Demo
+
+Experience the dashboard instantly without manual configuration:
+- **URL**: [Live Application Link](https://role-based-analytics-dashboard.vercel.app/) 
+- **Demo Accounts**:
+    - **Company Admin**: `demo_admin@dashboard.com` | `password123`
+    - **Employee**: `demo_employee@dashboard.com` | `password123`
+
+---
+
 ## 📖 Overview
 
 The **Restaurant Operations Backend** is the core intelligence layer for a sophisticated multi-tenant SaaS application. It manages complex role-based access control, restaurant data isolation, and detailed financial tracking (Revenue, Expenses, BlueBook P&L) for restaurant groups.
@@ -150,6 +160,10 @@ cp .env.example .env
 ```bash
 # Start development server
 npm run dev
+
+# 🧪 Seed Demo Data
+# Populate the database with 30 days of realistic history for all modules
+npm run seed:demo
 
 # Run migrations (Optional)
 npm run migrate

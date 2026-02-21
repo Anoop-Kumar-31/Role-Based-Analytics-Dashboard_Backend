@@ -126,6 +126,7 @@ app.use((err, req, res, next) => {
 let server; // Store server reference for graceful shutdown
 
 const { createSuperAdmin } = require('./src/seeders/createSuperAdmin');
+const { seedDemoData } = require('./src/seeders/demoSeeder');
 
 const startServer = async () => {
     try {
@@ -146,8 +147,9 @@ const startServer = async () => {
         await db.sequelize.sync(syncOptions);
         console.log('✅ Database models synchronized');
 
-        // Create super admin after sync
+        // Create super admin and seed demo data after sync
         await createSuperAdmin();
+        await seedDemoData();
 
         // Start server only if not already running
         if (!server) {

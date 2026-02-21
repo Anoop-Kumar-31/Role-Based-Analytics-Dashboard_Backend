@@ -8,6 +8,7 @@
     "dev": "nodemon server.js",
     "migrate": "npx sequelize-cli db:migrate",
     "seed": "npx sequelize-cli db:seed:all",
+    "seed:demo": "node src/seeders/demoSeeder.js",
     "migrate:undo": "npx sequelize-cli db:migrate:undo"
   },
   "keywords": [
