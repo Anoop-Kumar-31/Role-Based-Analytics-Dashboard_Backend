@@ -208,16 +208,27 @@ exports.getUserByEmail = async (req, res) => {
 exports.updateUser = async (req, res) => {
     try {
         const { user_id } = req.params;
-        const updates = {
-            first_name: req.body.user_first_name,
-            last_name: req.body.user_last_name,
-            email: req.body.user_email,
-            phone_number: req.body.user_phone_no,
-            role: req.body.role,
-            restaurant_name: req.body.restaurant_name,
-            company_id: req.body.company_id,
-            is_active: req.body?.is_active || true
+        const updates = {};
+        const fieldMapping = {
+            user_first_name: 'first_name',
+            user_last_name: 'last_name',
+            user_email: 'email',
+            user_phone_no: 'phone_number',
+            role: 'role',
+            restaurant_name: 'restaurant_name',
+            company_id: 'company_id',
+            is_active: 'is_active'
         };
+
+        Object.keys(fieldMapping).forEach(key => {
+            if (req.body[key] !== undefined) {
+                updates[fieldMapping[key]] = req.body[key];
+            }
+        });
+
+        if (req.userId === user_id || req.userRole === 'Company_Admin') {
+            updates.password = req.body.password;
+        }
 
         // Call service layer
         const user = await userService.updateUser(user_id, updates);
