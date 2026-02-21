@@ -16,15 +16,12 @@ const createSuperAdmin = async () => {
             return existingAdmin;
         }
 
-        // Hash password
-        const hashedPassword = await bcrypt.hash('super@admin', 10);
-
         // Create super admin
         const superAdmin = await User.create({
             first_name: 'Super',
             last_name: 'Admin',
             email: superAdminEmail,
-            password: hashedPassword,
+            password: 'super@admin',
             phone_number: '0000000000',
             role: 'Super_Admin',
             company_id: null,

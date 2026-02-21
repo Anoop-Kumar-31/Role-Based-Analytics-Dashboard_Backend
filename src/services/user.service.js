@@ -1,4 +1,3 @@
-const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { User, Restaurant, UserRestaurant, Company } = require('../models');
 
@@ -25,8 +24,8 @@ exports.authenticateUser = async (email, password) => {
             throw new Error('Account blocked');
         }
 
-        // Verify password
-        const isValidPassword = await bcrypt.compare(password, user.password);
+        // Verify password using model instance method
+        const isValidPassword = await user.validatePassword(password);
         if (!isValidPassword) {
             throw new Error('Invalid password');
         }
@@ -79,15 +78,12 @@ exports.createUser = async (userData) => {
             throw new Error('User already exists');
         }
 
-        // Hash password
-        const hashedPassword = await bcrypt.hash(userData.password || 'default@123', 10);
-
         // Create user
         const user = await User.create({
             first_name: userData.first_name,
             last_name: userData.last_name,
             email: userData.email,
-            password: hashedPassword,
+            password: userData.password || 'default@123',
             phone_number: userData.phone_number,
             role: userData.role || 'Restaurant_Employee',
             company_id: userData.company_id,
@@ -398,14 +394,13 @@ exports.addUserWithRestaurant = async (userData, companyId) => {
 
         // Generate default password
         const defaultPassword = 'default@123';
-        const hashedPassword = await bcrypt.hash(defaultPassword, 10);
 
         // Create user
         const newUser = await User.create({
             first_name: user_first_name,
             last_name: user_last_name,
             email: user_email,
-            password: hashedPassword,
+            password: defaultPassword,
             phone_number: user_phone_no,
             role: role,
             company_id: restaurant.company_id,
