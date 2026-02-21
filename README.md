@@ -53,6 +53,14 @@ Engineered for **security and developer experience**, it utilizes an optimized S
 
 ---
 
+## 📊 Database Schema
+
+Detailed entity-relationship mapping for core modules (Users, Restaurants, Financials, and Operational logs).
+
+![ER Diagram](./screenshots/ER.png)
+
+---
+
 ## 📂 Project Architecture
 
 ```bash
