@@ -8,6 +8,7 @@ const { validateExpense, validateUUID, validateOptionalUUID } = require('../midd
 router.post('/', verifyToken, validateExpense, expenseController.createExpense);
 router.get('/:company_id?', verifyToken, validateOptionalUUID('company_id'), expenseController.getAllExpenses);
 router.put('/:expense_id', verifyToken, validateUUID('expense_id'), expenseController.updateExpense);
+router.patch('/:expense_id', verifyToken, validateUUID('expense_id'), expenseController.updateExpense);
 router.delete('/:expense_id', verifyToken, validateUUID('expense_id'), expenseController.deleteExpense);
 
 module.exports = router;
