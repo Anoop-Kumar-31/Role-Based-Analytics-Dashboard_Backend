@@ -4,6 +4,7 @@ const forecastService = require('../services/forecast.service');
 const targetService = require('../services/target.service');
 const salesCategoryService = require('../services/salesCategory.service');
 const posService = require('../services/pos.service');
+const { User } = require('../models');
 
 // Helper function to convert month names to numbers
 function convertMonthNameToNumber(month) {
@@ -194,6 +195,7 @@ exports.createOnboarding = async (req, res) => {
                 phone_number: userInfo.phone_number,
                 role: 'Company_Admin', // First user is company admin
                 company_id: company_id,
+                is_active: false
             }, { transaction });
 
             console.log(`✅ User created: ${user.first_name} ${user.last_name} (${user.email})`);
@@ -297,6 +299,9 @@ exports.onboardCompany = async (req, res) => {
         const { company_id } = req.params;
 
         const company = await companyService.onboardCompany(company_id);
+        const user = await User.findOne({ where: { company_id } });
+        user.is_active = true;
+        await user.save();
 
         res.json({
             data: {

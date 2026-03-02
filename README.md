@@ -6,9 +6,13 @@
 [![Express](https://img.shields.io/badge/Express-4.18.2-000000?logo=express&logoColor=white&style=for-the-badge)](https://expressjs.com/)
 [![Sequelize](https://img.shields.io/badge/Sequelize-6.37.7-52B0E7?logo=sequelize&logoColor=white&style=for-the-badge)](https://sequelize.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?logo=postgresql&logoColor=white&style=for-the-badge)](https://www.postgresql.org/)
-[![Supabase](https://img.shields.io/badge/Supabase-Database-3ECF8E?logo=supabase&logoColor=white&style=for-the-badge)](https://supabase.com/)
+[![Supabase](https://img.shields.io/badge/Supabase-Database-3Ecf6E?logo=supabase&logoColor=white&style=for-the-badge)](https://supabase.com/)
 [![JWT](https://img.shields.io/badge/JWT-Secure-000000?logo=json-web-tokens&logoColor=white&style=for-the-badge)](https://jwt.io/)
-[![Render](https://img.shields.io/badge/Render-Deployed-430098?logo=render&logoColor=white&style=for-the-badge)](https://render.com/)
+[![Bcrypt](https://img.shields.io/badge/Bcrypt-5.1.1-000000?style=for-the-badge)](https://www.npmjs.com/package/bcrypt)
+[![GitHub](https://img.shields.io/badge/GitHub-Ready-2496ED?logo=github&logoColor=white&style=for-the-badge)](https://github.com/Anoop-Kumar-31/Role-Based-Analytics-Dashboard)
+[![CORS](https://img.shields.io/badge/CORS-Enabled-2496ED?logo=cors&logoColor=white&style=for-the-badge)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)
+[![Render](https://img.shields.io/badge/Render-Deployed-550099?logo=render&logoColor=white&style=for-the-badge)](https://render.com/)
+
 
 ---
 
@@ -54,12 +58,13 @@ Engineered for **security and developer experience**, it utilizes an optimized S
 | Layer | Technologies |
 | :--- | :--- |
 | **Runtime** | Node.js 18+ |
-| **Framework** | Express.js |
+| **Framework** | Express.js 4.18.2 |
 | **Database** | Supabase (PostgreSQL 15) |
-| **ORM** | Sequelize |
-| **Auth** | JWT / bcrypt |
+| **ORM** | Sequelize 6.37.7 |
+| **Auth** | JWT, bcrypt |
 | **Validation** | express-validator |
 | **Security** | Helmet, CORS, Compression |
+| **Logging** | morgan |
 
 ---
 
