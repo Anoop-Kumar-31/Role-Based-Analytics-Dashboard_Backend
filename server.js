@@ -56,12 +56,24 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Health check endpoint (important for Render free tier to prevent sleep)
-app.get('/health', (req, res) => {
-    res.status(200).json({
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime()
-    });
+// Also pings the DB so Supabase connection pool wakes up alongside the server
+app.get('/health', async (req, res) => {
+    try {
+        await db.sequelize.query('SELECT 1');
+        res.status(200).json({
+            server_status: 'ok',
+            db_status: 'available and connected',
+            timestamp: new Date().toISOString(),
+            uptime: process.uptime()
+        });
+    } catch (err) {
+        res.status(200).json({
+            server_status: 'ok',
+            db_status: 'unavailable and not connected',
+            timestamp: new Date().toISOString(),
+            uptime: process.uptime()
+        });
+    }
 });
 
 // API routes - Modular routing
