@@ -5,7 +5,7 @@ const helmet = require('helmet');
 const compression = require('compression');
 const morgan = require('morgan');
 const db = require('./src/models');
-
+const cron = require('node-cron');
 const app = express();
 const PORT = process.env.PORT || 8080;
 const isProd = process.env.NODE_ENV === 'production';
@@ -73,6 +73,16 @@ app.get('/health', async (req, res) => {
             timestamp: new Date().toISOString(),
             uptime: process.uptime()
         });
+    }
+});
+
+// Runs every 5 days at midnight — prevents Supabase free-tier pause (7-day inactivity limit)
+cron.schedule('0 0 */5 * *', async () => {
+    try {
+        await db.sequelize.query('SELECT 1');
+        console.log('✅ [Cron] Supabase keep-alive ping successful');
+    } catch (err) {
+        console.error('❌ [Cron] Supabase keep-alive ping failed:', err.message);
     }
 });
 
